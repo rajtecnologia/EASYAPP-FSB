@@ -18,9 +18,6 @@ import 'package:url_launcher/url_launcher.dart'; // Para obter a localização
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-
-
-
   runApp(const MyApp());
 }
 
@@ -36,7 +33,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       // home: const MyHomePage(title: 'EasyApplication ERP'),
-      home:  SplashScreen(),
+      home: SplashScreen(),
     );
   }
 }
@@ -60,8 +57,6 @@ class _MyHomePageState extends State<MyHomePage> {
   String codigo_usuario = "";
   String codigo_cliente = "";
 
-
- 
   // Função para obter a localização usando o pacote 'location'
   Future<void> getLocation() async {
     try {
@@ -98,8 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
       String longitudeUsuario,
       String velocidade,
       String rumo,
-      String codigoUsuario
-      ) async {
+      String codigoUsuario) async {
     dio.Response<dynamic>? res = await EnvioRastreioWS.enviaRastreioRomaneioWS(
       codigoRegional: "1",
       codigoUsuario: codigoUsuario,
@@ -134,9 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
         longitude.toString(),
         velocidade.toString(),
         rumo.toString(),
-        codigo_usuario
-        
-        );
+        codigo_usuario);
 
     if (retorno) {
       print("Localização enviada");
@@ -147,7 +139,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // print("Enviando localização: Latitude = $latitude, Longitude = $longitude");
   }
 
- 
   Future<void> downloadFile(String url, String savePath) async {
     try {
       final dio.Dio client = dio.Dio();
@@ -181,7 +172,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void didChangeDependencies() async {
-   
     try {
       temInternet = await InternetConnection().hasInternetAccess;
       setState(() {
@@ -190,7 +180,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
       // Configurar o Timer para obter a localização a cada 120 segundos
       Timer.periodic(Duration(seconds: 120), (Timer t) => getLocation());
-
     } catch (e) {
       setState(() {
         carregando = false;
@@ -257,6 +246,12 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       );
     }
+    String ambiente = '';
+    if (Platform.isAndroid) {
+      ambiente = 'android';
+    } else if (Platform.isIOS) {
+      ambiente = 'ios';
+    }
 
     return PopScope(
       canPop: false,
@@ -269,43 +264,39 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             initialUrlRequest: URLRequest(
               url: WebUri.uri(Uri.tryParse(
-                      'https://www.rajsolucoes.com.br/easyapplication/frisaborerp/app_easy_wv/login.php') ??
+                      'https://www.rajsolucoes.com.br/easyapplication/frisaborerp/app_easy_wv/login.php?ambiente=$ambiente') ??
                   Uri()),
             ),
-            
-            
             onDownloadStartRequest: (controller, downloadStartRequest) async {
               final url = downloadStartRequest.url.toString();
               final filename =
                   downloadStartRequest.suggestedFilename ?? 'file.pdf';
 
               // Pedir permissão de armazenamento, se necessário
-              if (await Permission.manageExternalStorage.request().isGranted) {
+              if (await Permission.storage.request().isGranted) {
                 Directory? directory;
                 if (Platform.isAndroid) {
                   directory = Directory('/storage/emulated/0/Download');
-            
                 } else if (Platform.isIOS) {
                   directory = await getApplicationDocumentsDirectory();
                 }
 
                 if (directory != null) {
                   final filePath = '${directory.path}/$filename';
-                 
-                  // Baixar o arquivo
-                   await downloadFile(url, filePath);
 
+                  // Baixar o arquivo
+                  await downloadFile(url, filePath);
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Download concluído: $filePath')),
-
                   );
                   //PARA ABRIR O ARQUIVO
                   final result = await OpenFile.open(filePath);
                   if (result.type == ResultType.error) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Erro ao abrir o arquivo: ${result.message}'),
+                        content:
+                            Text('Erro ao abrir o arquivo: ${result.message}'),
                       ),
                     );
                   }
@@ -361,7 +352,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     action: PermissionResponseAction.GRANT);
               }
 
-
               return PermissionResponse(action: PermissionResponseAction.DENY);
             },
             onConsoleMessage: (controller, consoleMessage) {
@@ -405,15 +395,45 @@ class _SplashScreenState extends State<SplashScreen> {
     });
   }
 
-  Future<void> _showPermissionDialog() async {
+  static bool permissoesAceita = false;
 
+  Future<void> _showPermissionDialog() async {
+    if (permissoesAceita) {
+      return;
+    }
+
+    var status = await Permission.locationWhenInUse.request();
+
+    if (!status.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Permissões de localizacao durante o uso nao aceita. Por favor feche o app reabra e tente novamente.')),
+      );
+
+      return;
+    }
+
+    var status2 = await Permission.location.request();
+
+    if (!status2.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Permissões de localizacao nao aceita. Por favor feche o app reabra e tente novamente.')),
+      );
+
+      return;
+    }
+
+    if (status2.isGranted) {
+      //o await no ios nao funciona. Entao chamar de novo abaixo para ter certeza.
+      Permission.locationAlways.request();
+    }
 
     Map<Permission, per.PermissionStatus> statuses = await [
       Permission.camera,
       Permission.storage,
-      Permission.location,
-      Permission.locationAlways,
-      Permission.microphone
     ].request();
 
     // Verifica se as permissões foram concedidas
@@ -421,69 +441,91 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (allGranted) {
       // Redireciona para a próxima tela se tudo foi concedido
+      permissoesAceita = true;
+
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => MyHomePage(title: "A",)),
+        MaterialPageRoute(
+            builder: (context) => MyHomePage(
+                  title: "A",
+                )),
       );
     } else {
       showDialog(
-      context: context,
-      barrierDismissible: false, // Não fecha o diálogo ao tocar fora dele
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Permissões Necessárias'),
-          content: const Text("O Easyapplication faz a coleta e transmite os dados da localização(geolocalização) exata do seu aparelho mesmo mesmo quando o app não esta aberto (em background). Estes dados são armazenados em nosso sistema para extração de relatórios pelo seu gestor."),
-
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Fecha o diálogo
-                _requestPermissions(); // Solicita as permissões
-              },
-              child: Text('Concordar'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Fecha o diálogo
-                // Você pode redirecionar ou encerrar o app se necessário
-              },
-              child: Text('Sair'),
-            ),
-          ],
-        );
-      },
-    );
-  
+        context: context,
+        barrierDismissible: false, // Não fecha o diálogo ao tocar fora dele
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Permissões Necessárias'),
+            content: const Text(
+                "O Easyapplication faz a coleta e transmite os dados da localização(geolocalização) exata do seu aparelho mesmo mesmo quando o app não esta aberto (em background). Estes dados são armazenados em nosso sistema para extração de relatórios pelo seu gestor."),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Fecha o diálogo
+                  _requestPermissions(); // Solicita as permissões
+                },
+                child: Text('Concordar'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Fecha o diálogo
+                  // Você pode redirecionar ou encerrar o app se necessário
+                },
+                child: Text('Sair'),
+              ),
+            ],
+          );
+        },
+      );
     }
-
-
   }
 
   Future<void> _requestPermissions() async {
-    // Solicitar permissões necessárias
-    await Permission.storage.request();
-    // await Permission.manageExternalStorage.request();
+    var status = await Permission.locationWhenInUse.request();
 
-    await Permission.camera.request();
-    await Permission.microphone.request();
-    await Permission.location.request();
-    await Permission.locationAlways.request();
+    if (!status.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Permissões de localizacao durante o uso nao aceita. Por favor feche o app reabra e tente novamente.')),
+      );
 
+      return;
+    }
+
+    var status2 = await Permission.location.request();
+
+    if (!status2.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Permissões de localizacao nao aceita. Por favor feche o app reabra e tente novamente.')),
+      );
+
+      return;
+    }
+
+    if (status2.isGranted) {
+      Permission.locationAlways.request();
+    }
 
     Map<Permission, per.PermissionStatus> statuses = await [
       Permission.camera,
       Permission.storage,
-      Permission.location,
-      Permission.locationAlways,
-      Permission.microphone
     ].request();
 
     // Verifica se as permissões foram concedidas
-    bool allGranted = statuses.values.every((status) => status.isGranted);
+    bool allGranted = statuses.values.every((status) {
+      return status.isGranted;
+    });
 
     if (allGranted) {
       // Redireciona para a próxima tela se tudo foi concedido
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => MyHomePage(title: "EasyApplication",)),
+        MaterialPageRoute(
+            builder: (context) => MyHomePage(
+                  title: "EasyApplication",
+                )),
       );
     } else {
       // Exibe mensagem ou executa alguma ação se as permissões forem negadas
@@ -495,11 +537,19 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    if (!permissoesAceita) {
+      return const Scaffold(
+        body: Center(
+          child: Text('Validando permissoes...'),
+        ),
+      );
+    }
+
+    return const Scaffold(
       body: Center(
-        child: MyHomePage(title: "EasyApplication"), // Tela de carregamento inicial
+        child: MyHomePage(
+            title: "EasyApplication"), // Tela de carregamento inicial
       ),
     );
   }
 }
-
