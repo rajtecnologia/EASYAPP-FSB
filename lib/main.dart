@@ -401,6 +401,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (permissoesAceita) {
       return;
     }
+    await Future.delayed(const Duration(milliseconds: 500));
 
     var status = await Permission.locationWhenInUse.request();
 
@@ -413,7 +414,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
       return;
     }
-
+    await Future.delayed(const Duration(milliseconds: 300));
     var status2 = await Permission.location.request();
 
     if (!status2.isGranted) {
@@ -427,9 +428,12 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     if (status2.isGranted) {
+      await Future.delayed(const Duration(milliseconds: 300));
       //o await no ios nao funciona. Entao chamar de novo abaixo para ter certeza.
-      Permission.locationAlways.request();
+      await Permission.locationAlways.request();
     }
+
+    await Future.delayed(const Duration(milliseconds: 300));
 
     Map<Permission, per.PermissionStatus> statuses = await [
       Permission.camera,
@@ -481,56 +485,67 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _requestPermissions() async {
-    var status = await Permission.locationWhenInUse.request();
+    try {
+      var status = await Permission.locationWhenInUse.request();
 
-    if (!status.isGranted) {
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  'Permissões de localizacao durante o uso nao aceita. Por favor feche o app reabra e tente novamente.')),
+        );
+
+        return;
+      }
+      await Future.delayed(const Duration(milliseconds: 300));
+      var status2 = await Permission.location.request();
+
+      if (!status2.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  'Permissões de localizacao nao aceita. Por favor feche o app reabra e tente novamente.')),
+        );
+
+        return;
+      }
+
+      if (status2.isGranted) {
+        await Permission.locationAlways.request();
+      }
+
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      Map<Permission, per.PermissionStatus> statuses = await [
+        Permission.camera,
+        Permission.storage,
+      ].request();
+
+      // Verifica se as permissões foram concedidas
+      bool allGranted = statuses.values.every((status) {
+        return status.isGranted;
+      });
+
+      if (allGranted) {
+        permissoesAceita = true;
+
+        // Redireciona para a próxima tela se tudo foi concedido
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+              builder: (context) => const MyHomePage(
+                    title: "EasyApplication",
+                  )),
+        );
+      } else {
+        // Exibe mensagem ou executa alguma ação se as permissões forem negadas
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Permissões necessárias não foram concedidas.')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                'Permissões de localizacao durante o uso nao aceita. Por favor feche o app reabra e tente novamente.')),
-      );
-
-      return;
-    }
-
-    var status2 = await Permission.location.request();
-
-    if (!status2.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                'Permissões de localizacao nao aceita. Por favor feche o app reabra e tente novamente.')),
-      );
-
-      return;
-    }
-
-    if (status2.isGranted) {
-      Permission.locationAlways.request();
-    }
-
-    Map<Permission, per.PermissionStatus> statuses = await [
-      Permission.camera,
-      Permission.storage,
-    ].request();
-
-    // Verifica se as permissões foram concedidas
-    bool allGranted = statuses.values.every((status) {
-      return status.isGranted;
-    });
-
-    if (allGranted) {
-      // Redireciona para a próxima tela se tudo foi concedido
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-            builder: (context) => MyHomePage(
-                  title: "EasyApplication",
-                )),
-      );
-    } else {
-      // Exibe mensagem ou executa alguma ação se as permissões forem negadas
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Permissões necessárias não foram concedidas.')),
+        SnackBar(content: Text(e.toString())),
       );
     }
   }
