@@ -89,6 +89,25 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  bool _isRunning = true;
+  void startLocationUpdates() async {
+    while (_isRunning) {
+      try {
+        await getLocation();
+      } catch (e) {
+        print("Erro ao obter localização periódica: $e");
+        _isRunning = false;
+      }
+
+      try {
+        await Future.delayed(Duration(seconds: 180));
+      } catch (e) {
+        print("Erro no delay: $e");
+        _isRunning = false;
+      }
+    }
+  }
+
   Future<bool> enviaRastreioRomaneio(
       String latitudeUsuario,
       String longitudeUsuario,
@@ -193,6 +212,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    startLocationUpdates();
   }
 
   @override
