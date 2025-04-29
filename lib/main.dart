@@ -179,7 +179,7 @@ class _MyHomePageState extends State<MyHomePage> {
       });
 
       // Configurar o Timer para obter a localização a cada 120 segundos
-      Timer.periodic(Duration(seconds: 120), (Timer t) => getLocation());
+      //Timer.periodic(Duration(seconds: 120), (Timer t) => getLocation());
     } catch (e) {
       setState(() {
         carregando = false;
