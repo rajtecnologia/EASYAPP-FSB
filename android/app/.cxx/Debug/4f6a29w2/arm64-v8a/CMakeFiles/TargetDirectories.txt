@@ -1,0 +1,2 @@
+D:/FSB/EASYAPP-FSB/android/app/.cxx/Debug/4f6a29w2/arm64-v8a/CMakeFiles/edit_cache.dir
+D:/FSB/EASYAPP-FSB/android/app/.cxx/Debug/4f6a29w2/arm64-v8a/CMakeFiles/rebuild_cache.dir
