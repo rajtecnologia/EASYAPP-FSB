@@ -547,8 +547,8 @@ class _SplashScreenState extends State<SplashScreen> {
         return status.isGranted;
       });
 
-      if (allGranted) {
-        permissoesAceita = true;
+      // if (allGranted) {
+      //   permissoesAceita = true;
 
         // Redireciona para a próxima tela se tudo foi concedido
         Navigator.of(context).pushReplacement(
@@ -557,13 +557,13 @@ class _SplashScreenState extends State<SplashScreen> {
                     title: "EasyApplication",
                   )),
         );
-      } else {
-        // Exibe mensagem ou executa alguma ação se as permissões forem negadas
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Permissões necessárias não foram concedidas.')),
-        );
-      }
+      // } else {
+      //   // Exibe mensagem ou executa alguma ação se as permissões forem negadas
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(
+      //         content: Text('Permissões necessárias não foram concedidas.')),
+      //   );
+      // }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
