@@ -1,19 +1,20 @@
 import 'dart:async'; // Para usar Timer
 import 'dart:convert';
 import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
+// import 'package:http/http.dart' as http;
+
 import 'package:dio/dio.dart' as dio;
-import 'package:dio/dio.dart';
 import 'package:easy_fsb/conexao_ws.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+import 'package:http/http.dart' as http;
+// import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:permission_handler/permission_handler.dart' as per;
 import 'package:location/location.dart';
-import 'package:url_launcher/url_launcher.dart'; // Para obter a localização
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -126,10 +127,14 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     if (res != null) {
-      Map<String, dynamic> json = jsonDecode(res.data);
+      var decoded = jsonDecode(res.data);
+      if (decoded is List) {
+        // Pega o primeiro item da lista
+        Map<String, dynamic> json = decoded.first;
 
-      if (json.containsKey('valido')) {
-        return true;
+        if (json.containsKey('valido')) {
+          return true;
+        }
       } else {
         return false;
       }
@@ -193,7 +198,8 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void didChangeDependencies() async {
     try {
-      temInternet = await InternetConnection().hasInternetAccess;
+      
+       temInternet = await  verificarInternet();
       setState(() {
         carregando = false;
       });
@@ -208,6 +214,28 @@ class _MyHomePageState extends State<MyHomePage> {
 
     super.didChangeDependencies();
   }
+
+  Future<bool> verificarInternet() async {
+  try {
+    // Primeiro, verificar conectividade
+    final connectivityResult = await Connectivity().checkConnectivity();
+    
+    if (connectivityResult == ConnectivityResult.none) {
+      return false;
+    }
+    
+    // Depois, testar acesso real à internet
+    final response = await http.get(
+      Uri.parse('https://www.google.com'),
+      headers: {'User-Agent': 'Flutter App'},
+    ).timeout(Duration(seconds: 5));
+    
+    return response.statusCode == 200;
+  } catch (e) {
+    print('Erro ao verificar internet: $e');
+    return false;
+  }
+}
 
   @override
   void initState() {
@@ -550,13 +578,13 @@ class _SplashScreenState extends State<SplashScreen> {
       // if (allGranted) {
       //   permissoesAceita = true;
 
-        // Redireciona para a próxima tela se tudo foi concedido
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-              builder: (context) => const MyHomePage(
-                    title: "EasyApplication",
-                  )),
-        );
+      // Redireciona para a próxima tela se tudo foi concedido
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+            builder: (context) => const MyHomePage(
+                  title: "EasyApplication",
+                )),
+      );
       // } else {
       //   // Exibe mensagem ou executa alguma ação se as permissões forem negadas
       //   ScaffoldMessenger.of(context).showSnackBar(
