@@ -6,6 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 import 'package:dio/dio.dart' as dio;
 import 'package:easy_fsb/conexao_ws.dart';
+import 'package:easy_fsb/versao_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:http/http.dart' as http;
@@ -199,7 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void didChangeDependencies() async {
     try {
       
-       temInternet = await  verificarInternet();
+       //temInternet = await  verificarInternet();
       setState(() {
         carregando = false;
       });
@@ -269,32 +270,34 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
 
-    if (!temInternet) {
-      return Scaffold(
-        body: SizedBox(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: const Row(
-            children: [
-              Spacer(),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Spacer(),
-                  Text(
-                    'Ops! Erro ao carregar página:\n\nPor favor verifique sua internet.',
-                    textAlign: TextAlign.center,
-                  ),
-                  Spacer(),
-                ],
-              ),
-              Spacer(),
-            ],
-          ),
-        ),
-      );
-    }
+    // if (!temInternet) {
+    //   return Scaffold(
+    //     body: SizedBox(
+    //       height: MediaQuery.of(context).size.height,
+    //       width: MediaQuery.of(context).size.width,
+    //       child: const Row(
+    //         children: [
+    //           Spacer(),
+    //           Column(
+    //             mainAxisAlignment: MainAxisAlignment.center,
+    //             crossAxisAlignment: CrossAxisAlignment.center,
+    //             children: [
+    //               Spacer(),
+    //               Text(
+    //                 'Ops! Erro ao carregar página:\n\nPor favor verifique sua internet.',
+    //                 textAlign: TextAlign.center,
+    //               ),
+    //               Spacer(),
+    //             ],
+    //           ),
+    //           Spacer(),
+    //         ],
+    //       ),
+    //     ),
+    //   );
+    // }
+
+
     String ambiente = '';
     if (Platform.isAndroid) {
       ambiente = 'android';
@@ -313,7 +316,7 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             initialUrlRequest: URLRequest(
               url: WebUri.uri(Uri.tryParse(
-                      'https://www.rajsolucoes.com.br/easyapplication/frisaborerp/app_easy_wv/login.php?ambiente=$ambiente') ??
+                      'https://www.rajsolucoes.com.br/easyapplication/frisaborerp/app_easy_wv/login.php?versaoApp=${Globais.versaoAtual}') ??
                   Uri()),
             ),
             onDownloadStartRequest: (controller, downloadStartRequest) async {
@@ -338,7 +341,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Download concluído: $filePath')),
-                  );
+                  );  
                   //PARA ABRIR O ARQUIVO
                   final result = await OpenFile.open(filePath);
                   if (result.type == ResultType.error) {
