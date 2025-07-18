@@ -102,7 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
 
       try {
-        await Future.delayed(Duration(seconds: 180));
+        await Future.delayed(const Duration(seconds: 180));
       } catch (e) {
         print("Erro no delay: $e");
         _isRunning = false;
@@ -199,8 +199,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void didChangeDependencies() async {
     try {
-      
-       //temInternet = await  verificarInternet();
+      //temInternet = await  verificarInternet();
       setState(() {
         carregando = false;
       });
@@ -217,26 +216,26 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<bool> verificarInternet() async {
-  try {
-    // Primeiro, verificar conectividade
-    final connectivityResult = await Connectivity().checkConnectivity();
-    
-    if (connectivityResult == ConnectivityResult.none) {
+    try {
+      // Primeiro, verificar conectividade
+      final connectivityResult = await Connectivity().checkConnectivity();
+
+      if (connectivityResult == ConnectivityResult.none) {
+        return false;
+      }
+
+      // Depois, testar acesso real à internet
+      final response = await http.get(
+        Uri.parse('https://www.google.com'),
+        headers: {'User-Agent': 'Flutter App'},
+      ).timeout(const Duration(seconds: 5));
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Erro ao verificar internet: $e');
       return false;
     }
-    
-    // Depois, testar acesso real à internet
-    final response = await http.get(
-      Uri.parse('https://www.google.com'),
-      headers: {'User-Agent': 'Flutter App'},
-    ).timeout(Duration(seconds: 5));
-    
-    return response.statusCode == 200;
-  } catch (e) {
-    print('Erro ao verificar internet: $e');
-    return false;
   }
-}
 
   @override
   void initState() {
@@ -297,7 +296,6 @@ class _MyHomePageState extends State<MyHomePage> {
     //   );
     // }
 
-
     String ambiente = '';
     if (Platform.isAndroid) {
       ambiente = 'android';
@@ -341,7 +339,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Download concluído: $filePath')),
-                  );  
+                  );
                   //PARA ABRIR O ARQUIVO
                   final result = await OpenFile.open(filePath);
                   if (result.type == ResultType.error) {
@@ -433,6 +431,8 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -459,7 +459,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!status.isGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
             content: Text(
                 'Permissões de localizacao durante o uso nao aceita. Por favor feche o app reabra e tente novamente.')),
       );
@@ -471,7 +471,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!status2.isGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
             content: Text(
                 'Permissões de localizacao nao aceita. Por favor feche o app reabra e tente novamente.')),
       );
@@ -501,7 +501,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-            builder: (context) => MyHomePage(
+            builder: (context) => const MyHomePage(
                   title: "A",
                 )),
       );
@@ -511,7 +511,7 @@ class _SplashScreenState extends State<SplashScreen> {
         barrierDismissible: false, // Não fecha o diálogo ao tocar fora dele
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Permissões Necessárias'),
+            title: const Text('Permissões Necessárias'),
             content: const Text(
                 "O Easyapplication faz a coleta e transmite os dados da localização(geolocalização) exata do seu aparelho mesmo mesmo quando o app não esta aberto (em background). Estes dados são armazenados em nosso sistema para extração de relatórios pelo seu gestor."),
             actions: [
@@ -520,14 +520,14 @@ class _SplashScreenState extends State<SplashScreen> {
                   Navigator.of(context).pop(); // Fecha o diálogo
                   _requestPermissions(); // Solicita as permissões
                 },
-                child: Text('Concordar'),
+                child: const Text('Concordar'),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop(); // Fecha o diálogo
                   // Você pode redirecionar ou encerrar o app se necessário
                 },
-                child: Text('Sair'),
+                child: const Text('Sair'),
               ),
             ],
           );
